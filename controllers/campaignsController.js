@@ -1,13 +1,20 @@
 const shortid = require('shortid')
 const { isEmpty, omit } = require('lodash')
-const { OK, NOT_FOUND, BAD_REQUEST, CREATED, NO_CONTENT, B } = require('http-status')
+const { OK, NOT_FOUND, BAD_REQUEST, CREATED, NO_CONTENT } = require('http-status')
 
-const { SOURCES, SHORT_ID_CHARACTERS, CAMPAIGN_STATUS } = require('../utils/constants')
+const {
+  SOURCES,
+  SHORT_ID_CHARACTERS,
+  CAMPAIGN_STATUS,
+  DEFAULT_PAGE_NUMBER,
+  DEFAULT_PAGE_SIZE
+} = require('../utils/constants')
 const { API } = SOURCES
 const { ACTIVE, ARCHIVED, PENDING } = CAMPAIGN_STATUS
 
 const Campaign = require('../models/campaign')
 const Product = require('../models/product')
+const paginate = require('../helpers/paginate')
 
 const campaignStatuses = [ACTIVE, ARCHIVED, PENDING]
 
@@ -19,21 +26,25 @@ class CampaignsController {
   }
 
   async index(ctx) {
-    let status = null
     let campaigns = null
+    let pagination = null
+    const { status } = ctx.query
 
     try {
-      if (ctx.query.status) {
-        status = ctx.query.status
+      if (status) {
         if (!campaignStatuses.includes(status)) return this.badRequest(ctx, 'Invalid status')
       }
-      campaigns = await this.campaignsRepo.getAllCampaigns(status)
+      const page = parseInt(ctx.query.page) || DEFAULT_PAGE_NUMBER
+      const pageSize = parseInt(ctx.query.pageSize) || DEFAULT_PAGE_SIZE
+
+      campaigns = await this.campaignsRepo.getAllCampaigns(page, pageSize, status)
+      pagination = paginate(page, pageSize, campaigns.count)
     } catch (e) {
       ctx.body = e.message
     }
 
     if (campaigns && !isEmpty(campaigns)) {
-      ctx.body = campaigns
+      ctx.body = { docs: campaigns, pagination }
       ctx.status = OK
     } else {
       ctx.body = []

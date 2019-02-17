@@ -86,17 +86,16 @@ campaignSchema.statics = {
 
     return !isEmpty(await this.find(conditions))
   },
-  getAllCampaigns: async function(status = null, projection = { _id: 0 }) {
-    if (status) {
-      const conditions = generateFilterConditions(status)
+  getAllCampaigns: async function(page, pageSize, status = null, projection = { _id: 0 }) {
+    const conditions = generateFilterConditions(status)
+    const skip = (page - 1) * pageSize
 
-      if (this.isValidCondition(conditions)) {
-        return await this.find(conditions, projection).select('-__v')
-      } else {
-        throw new Error('Invalid Filter')
-      }
-    }
-    return await this.find({}, projection).select('-__v')
+    const campaigns = await this.find(conditions, projection)
+      .skip(skip)
+      .limit(pageSize)
+      .select('-__v')
+    const count = await this.find(conditions, projection).count()
+    return { campaigns, count }
   },
   getCampaignById: async function(campaignId, projection = { _id: 0 }) {
     return await this.findOne({ campaignId }, projection).select('-__v')
