@@ -26,13 +26,13 @@ Response:
                 "source": "import"
             }
         ],
-        "count": 66
+        "count": 35
     },
     "pagination": {
-        "totalSize": 66,
-        "pageSize": 100,
-        "pages": 1,
-        "page": null
+        "totalSize": 35,
+        "pageSize": 2,
+        "pages": 18,
+        "page": 1
     }
 }
 ```
