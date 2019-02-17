@@ -4,41 +4,47 @@
     "name":"western union",
     "product":"2250570",
     "startDate":"2019-02-15T14:00:00.000Z",
-    "endDate":"2019-05-19T14:00:00.000Z"
+    "endDate":"2019-05-19T14:00:00.000Z",
+    "source": "api"
   },
   {
     "campaignId":"50501",
     "name":"the hershey",
     "product":"2250576",
     "startDate":"2019-02-18T05:00:00.000Z",
-    "endDate":"2019-02-21T04:00:00.000Z"
+    "endDate":"2019-02-21T04:00:00.000Z",
+    "source": "api"
   },
   {
     "campaignId":"50502",
     "name":"wells fargo & company",
     "product":"2250582",
     "startDate":"2019-01-05T09:00:00.000Z",
-    "endDate":"2019-01-10T21:00:00.000Z"
+    "endDate":"2019-01-10T21:00:00.000Z",
+    "source": "api"
   },
   {
     "campaignId":"50503",
     "name":"boston scientific corporation",
     "product":"2250573",
     "startDate":"2018-03-10T03:00:00.000Z",
-    "endDate":"2018-03-15T03:00:00.000Z"
+    "endDate":"2018-03-15T03:00:00.000Z",
+    "source": "api"
   },
   {
     "campaignId":"50504",
     "name":"plains all american pipeline",
     "product":"2250572",
     "startDate":"2018-05-15T07:00:00.000Z",
-    "endDate":"2018-06-15T07:00:00.000Z"
+    "endDate":"2018-06-15T07:00:00.000Z",
+    "source": "api"
   },
   {
     "campaignId":"50505",
     "name":"cabela",
     "product":"2250520",
     "startDate":"2018-02-05T08:00:00.000Z",
-    "endDate":"2018-03-05T08:00:00.000Z"
+    "endDate":"2018-03-05T08:00:00.000Z",
+    "source": "api"
   }
 ]
