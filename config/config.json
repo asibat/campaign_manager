@@ -1,0 +1,14 @@
+{
+  "development": {
+    "app": {
+      "port": 8080
+    },
+    "mongoUrl": "mongodb://localhost:27017/manager_dev"
+  },
+  "test": {
+    "app": {
+      "port": 8080
+    },
+    "mongoUrl": "mongodb://localhost:27017/manager_test"
+  }
+}
