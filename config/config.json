@@ -10,5 +10,11 @@
       "port": 8080
     },
     "mongoUrl": "mongodb://localhost:27017/manager_test"
+  },
+  "production": {
+    "app": {
+      "port": 8080
+    },
+    "mongoUrl": "mongodb://mongo:27017/manager"
   }
 }

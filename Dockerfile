@@ -1,11 +1,11 @@
 FROM node:10-alpine
 
-RUN mkdir /app
+COPY package.json /app/package.json
 WORKDIR /app
-
+RUN npm install
 COPY . ./
 
-RUN npm install
+ADD https://raw.githubusercontent.com/eficode/wait-for/master/wait-for ./
+RUN chmod +x wait-for
 
 EXPOSE 8080
-CMD ["npm", "start"]
