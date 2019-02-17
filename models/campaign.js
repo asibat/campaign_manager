@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const { isEmpty } = require('lodash')
+const { isEmpty, omit } = require('lodash')
 
 const { CAMPAIGN_STATUS } = require('../utils/constants')
 
@@ -85,12 +85,13 @@ campaignSchema.statics = {
     return !isEmpty(await this.find(conditions))
   },
   getAllCampaigns: async function(page = 1, pageSize = 2, conditions = {}, projection = { _id: 0 }) {
-    const { status, source } = conditions
-    let filteredStatus = null
-    if (status) conditions[status] = generateFilterConditions(status)
+    const { status } = conditions
+    if (status) {
+      const filteredStatus = generateFilterConditions(status)
+      conditions = { ...filteredStatus, ...omit(conditions, ['status']) }
+    }
 
     const skip = (page - 1) * pageSize
-
     const campaigns = await this.find(conditions, projection)
       .skip(skip)
       .limit(pageSize)
