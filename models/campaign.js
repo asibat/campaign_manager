@@ -50,6 +50,11 @@ const campaignSchema = new mongoose.Schema(
     endDate: {
       type: Date,
       required: true
+    },
+    source: {
+      type: String,
+      trim: true,
+      required: true
     }
   },
   { collection: 'campaigns' }
