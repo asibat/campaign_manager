@@ -1,8 +1,6 @@
 const mongoose = require('mongoose')
 const { isEmpty } = require('lodash')
 
-const Product = require('./product')
-
 const { CAMPAIGN_STATUS } = require('../utils/constants')
 
 const { ACTIVE, ARCHIVED, PENDING } = CAMPAIGN_STATUS
@@ -111,6 +109,8 @@ campaignSchema.statics = {
       if (this.isValidCondition(filterConditions)) conditions = { ...conditions, ...filterConditions }
     }
     return await this.find(conditions, projection)
+      .sort('startDate')
+      .select('-__v')
   },
   updateCampaign: async function(campaignId, campaignDon) {
     return await this.updateOne({ campaignId }, campaignDon)
