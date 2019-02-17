@@ -8,7 +8,6 @@ const { campaignId } = campaign
 
 const activeCampaigns = campaigns.slice(0, 1)
 const pendingCampaigns = campaigns.slice(1, 2)
-const archivedCampaigns = campaigns.slice(3, 5)
 
 const products = require('../fixtures/products')
 const product = products[0]
@@ -46,14 +45,17 @@ describe('CampaignsController', function() {
   })
 
   describe('INDEX /campaigns', function() {
+    const bulkCampaigns = cloneDeep(campaigns)
+
     it('returns all campaigns', async () => {
-      await Campaign.bulkInsert(campaigns)
+      await Campaign.bulkInsert(bulkCampaigns)
       const res = await chai.request(endpoint).get('/campaigns')
 
       expect(res).to.have.status(200)
       expect(res).to.be.json
-      expect(res.body).to.be.an('array')
-      expect(res.body).to.deep.equal(campaigns)
+      expect(res.body.docs.campaigns).to.be.an('array')
+      expect(res.body.docs.count).to.equal(6)
+      expect(res.body.pagination).to.containSubset({ totalSize: 6 })
     })
 
     it('returns error if status is invalid query string', async () => {
@@ -67,7 +69,7 @@ describe('CampaignsController', function() {
     })
 
     it('returns all active campaigns', async () => {
-      await Campaign.bulkInsert(campaigns)
+      await Campaign.bulkInsert(bulkCampaigns)
 
       const res = await chai
         .request(endpoint)
@@ -76,12 +78,13 @@ describe('CampaignsController', function() {
 
       expect(res).to.have.status(200)
       expect(res).to.be.json
-      expect(res.body).to.be.an('array')
-      expect(res.body).to.deep.equal(activeCampaigns)
+      expect(res.body.docs.count).to.equal(1)
+      expect(res.body.docs.campaigns).to.be.an('array')
+      expect(res.body.docs.campaigns).to.deep.equal(activeCampaigns)
     })
 
     it('returns all pending campaigns', async () => {
-      await Campaign.bulkInsert(campaigns)
+      await Campaign.bulkInsert(bulkCampaigns)
 
       const res = await chai
         .request(endpoint)
@@ -90,12 +93,13 @@ describe('CampaignsController', function() {
 
       expect(res).to.have.status(200)
       expect(res).to.be.json
-      expect(res.body).to.be.an('array')
-      expect(res.body).to.deep.equal(pendingCampaigns)
+      expect(res.body.docs.count).to.equal(1)
+      expect(res.body.docs.campaigns).to.be.an('array')
+      expect(res.body.docs.campaigns).to.deep.equal(pendingCampaigns)
     })
 
     it('returns all archived campaigns', async () => {
-      await Campaign.bulkInsert(campaigns)
+      await Campaign.bulkInsert(bulkCampaigns)
 
       const res = await chai
         .request(endpoint)
@@ -104,8 +108,8 @@ describe('CampaignsController', function() {
 
       expect(res).to.have.status(200)
       expect(res).to.be.json
-      expect(res.body).to.be.an('array')
-      expect(res.body).to.containSubset(archivedCampaigns)
+      expect(res.body.docs.count).to.equal(4)
+      expect(res.body.docs.campaigns).to.be.an('array')
     })
 
     it('returns empty array when collection is empty', async () => {
@@ -113,8 +117,8 @@ describe('CampaignsController', function() {
 
       expect(res).to.have.status(200)
       expect(res).to.be.json
-      expect(res.body).to.be.an('array')
-      expect(res.body).to.be.empty
+      expect(res.body.docs.campaigns).to.be.an('array')
+      expect(res.body.docs.campaigns).to.be.empty
     })
   })
 

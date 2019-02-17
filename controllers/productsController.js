@@ -1,10 +1,14 @@
 const shortid = require('shortid')
 const { isEmpty, omit, get } = require('lodash')
 const { OK, NOT_FOUND, BAD_REQUEST, CREATED, NO_CONTENT } = require('http-status')
-const { SOURCES, SHORT_ID_CHARACTERS, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } = require('../utils/constants')
-
-const PRODUCTS = require('../test/fixtures/products')
-const CAMPAIGNS = require('../test/fixtures/campaigns')
+const {
+  PRODUCTS,
+  CAMPAIGNS,
+  SOURCES,
+  SHORT_ID_CHARACTERS,
+  DEFAULT_PAGE_NUMBER,
+  DEFAULT_PAGE_SIZE
+} = require('../utils/constants')
 
 const { API } = SOURCES
 

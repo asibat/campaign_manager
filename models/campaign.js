@@ -86,14 +86,16 @@ campaignSchema.statics = {
 
     return !isEmpty(await this.find(conditions))
   },
-  getAllCampaigns: async function(page, pageSize, status = null, projection = { _id: 0 }) {
+  getAllCampaigns: async function(page = 1, pageSize = 2, status = null, projection = { _id: 0 }) {
     const conditions = generateFilterConditions(status)
     const skip = (page - 1) * pageSize
 
     const campaigns = await this.find(conditions, projection)
       .skip(skip)
       .limit(pageSize)
+      .sort('startDate')
       .select('-__v')
+
     const count = await this.find(conditions, projection).count()
     return { campaigns, count }
   },

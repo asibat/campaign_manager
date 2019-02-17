@@ -37,7 +37,7 @@ class CsvController {
       if (campaigns && !isEmpty(campaigns)) {
         for (let campaign of campaigns) {
           const { product: productId } = campaign
-          if (await this.productsRepo.isDuplicate(productId))
+          if (!(await this.productsRepo.isDuplicate(productId)))
             return this.badRequest(ctx, 'Campaign has Invalid ProductId')
         }
         await this.campaignsRepo.bulkInsert(campaigns)
