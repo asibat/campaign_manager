@@ -60,16 +60,16 @@ productSchema.statics = {
   getProductById: async function(productId, projection = { _id: 0 }) {
     return await this.findOne({ productId }, projection).select('-__v')
   },
-  getAllProducts: async function(page = 1, pageSize = 2) {
+  getAllProducts: async function(page = 1, pageSize = 2, conditions = {}) {
     const skip = (page - 1) * pageSize
 
-    const products = await this.find({}, { _id: 0 })
+    const products = await this.find(conditions, { _id: 0 })
       .skip(skip)
       .limit(pageSize)
       .sort('name')
       .select('-__v')
 
-    const count = await this.find({}).count()
+    const count = await this.find(conditions).count()
     return { products, count }
   },
   isDuplicate: async function(productId) {

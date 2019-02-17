@@ -6,6 +6,7 @@ API supports pagination default page size is 2
 ### Get Products
 
 **GET** */products*
+API supports filtering by source [api, import]
 
 Response:
 
@@ -54,7 +55,7 @@ Response:
 **GET** */products/:id/campaigns*
 **GET** */products/:id/campaigns?status=active*
 
-Can filter product's campaign by status [active,pending,archived]
+API supports filtering product's campaign by status [active,pending,archived]
 
 Response:
 
@@ -130,6 +131,7 @@ Response:
 ```
 
 **GET** */campaigns/*
+API supports filtering by source [api, import] and/or campaign status [active, pending, archived]
 
 Response:
 
