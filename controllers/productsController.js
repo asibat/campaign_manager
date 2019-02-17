@@ -37,12 +37,17 @@ class ProductsController {
   async index(ctx) {
     let pagination = null
     let products = null
-
+    let conditions = {}
+    const { source } = ctx.query
     try {
+      if (source) {
+        if (!['api', 'import'].includes(source)) return this.badRequest(ctx, 'Invalid source filter')
+        conditions['source'] = source
+      }
       const page = parseInt(ctx.query.page) || DEFAULT_PAGE_NUMBER
       const pageSize = parseInt(ctx.query.pageSize) || DEFAULT_PAGE_SIZE
 
-      products = await this.productsRepo.getAllProducts(page, pageSize)
+      products = await this.productsRepo.getAllProducts(page, pageSize, conditions)
       pagination = paginate(page, pageSize, products.count)
     } catch (e) {
       ctx.body = e.message

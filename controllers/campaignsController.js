@@ -28,16 +28,22 @@ class CampaignsController {
   async index(ctx) {
     let campaigns = null
     let pagination = null
-    const { status } = ctx.query
+    let conditions = {}
+    const { status, source } = ctx.query
 
     try {
       if (status) {
         if (!campaignStatuses.includes(status)) return this.badRequest(ctx, 'Invalid status')
+        conditions['status'] = status
+      }
+      if (source) {
+        if (!['api', 'import'].includes(source)) return this.badRequest(ctx, 'Invalid source filter')
+        conditions['source'] = source
       }
       const page = parseInt(ctx.query.page) || DEFAULT_PAGE_NUMBER
       const pageSize = parseInt(ctx.query.pageSize) || DEFAULT_PAGE_SIZE
 
-      campaigns = await this.campaignsRepo.getAllCampaigns(page, pageSize, status)
+      campaigns = await this.campaignsRepo.getAllCampaigns(page, pageSize, conditions)
       pagination = paginate(page, pageSize, campaigns.count)
     } catch (e) {
       ctx.body = e.message
