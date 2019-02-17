@@ -18,6 +18,7 @@ class CsvController {
   }
   async process(ctx) {
     if (!this.validateCsvParams(ctx)) return
+
     const files = ctx.request.files
     const csvData = {}
 
@@ -52,7 +53,9 @@ class CsvController {
   transformProductContent(products) {
     return products.reduce((transformedProducts, [name, company]) => {
       const productId = shortid.generate()
-      transformedProducts.push({ name, company, productId, source: IMPORT })
+      const productObject = { name, company, productId }
+      productObject['source'] = IMPORT
+      transformedProducts.push(productObject)
       return transformedProducts
     }, [])
   }
@@ -60,7 +63,10 @@ class CsvController {
   transformCampaignContent(campaigns) {
     return campaigns.reduce((transformedCampaigns, [name, product, startDate, endDate]) => {
       const campaignId = shortid.generate()
-      transformedCampaigns.push({ name, product, campaignId, startDate, endDate, source: IMPORT })
+      const campaignObject = { name, product, campaignId, startDate, endDate }
+
+      campaignObject['source'] = IMPORT
+      transformedCampaigns.push(campaignObject)
       return transformedCampaigns
     }, [])
   }
@@ -107,13 +113,16 @@ class CsvController {
   }
 
   validateCsvParams(ctx) {
-    if (!ctx.request.headers['content-type'].startsWith('multipart/form-data')) {
+    if (
+      !ctx.request.headers['content-type'] ||
+      !ctx.request.headers['content-type'].startsWith('multipart/form-data')
+    ) {
       this.badRequest(ctx, 'content-type must be multipart/form-data')
       return false
     }
 
-    if (!get(ctx.request, 'files')) {
-      this.badRequest(ctx, 'Could not find an attached files')
+    if (isEmpty(get(ctx.request, 'files'))) {
+      this.badRequest(ctx, 'Could not find attached files')
       return false
     }
 
