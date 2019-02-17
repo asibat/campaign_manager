@@ -12,3 +12,9 @@ Please create Dummy Data in order to use the api
 ```
 Execute Post request '/dummyData'
 ```
+
+### DOCKER
+Please Run docker
+```
+docker-compose up --build
+```
