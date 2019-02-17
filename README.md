@@ -6,3 +6,15 @@ This project was developed with Node.js, Koa2 and MongoDB
 
 - NodeJS v10+
 - mongoDB 4+
+
+### DUMMY DATA
+Please create Dummy Data in order to use the api
+```
+Execute Post request '/dummyData'
+```
+
+### DOCKER
+Please Run docker
+```
+docker-compose up --build
+```
