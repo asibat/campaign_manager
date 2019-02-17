@@ -5,15 +5,17 @@ const CAMPAIGNS = [
     name: 'western union',
     product: '2250520',
     startDate: '2019-02-15T14:00:00.000Z',
-    endDate: '2019-05-19T14:00:00.000Z'
+    endDate: '2019-02-19T14:00:00.000Z',
+    source: 'api'
   },
   {
     _id: '5a26396b99173b18b360bf24',
     campaignId: '50501',
     name: 'the hershey',
     product: '2250576',
-    startDate: '2019-06-18T05:00:00.000Z',
-    endDate: '2019-07-21T04:00:00.000Z'
+    startDate: '2019-02-18T05:00:00.000Z',
+    endDate: '2019-02-21T04:00:00.000Z',
+    source: 'api'
   },
   {
     _id: '5a26396b99173b18b360bf28',
@@ -21,7 +23,8 @@ const CAMPAIGNS = [
     name: 'wells fargo & company',
     product: '2250582',
     startDate: '2019-01-05T09:00:00.000Z',
-    endDate: '2019-01-10T21:00:00.000Z'
+    endDate: '2019-01-10T21:00:00.000Z',
+    source: 'api'
   },
   {
     _id: '5a26396b99173b18b360bf26',
@@ -29,7 +32,8 @@ const CAMPAIGNS = [
     name: 'boston scientific corporation',
     product: '2250573',
     startDate: '2018-03-10T03:00:00.000Z',
-    endDate: '2018-03-15T03:00:00.000Z'
+    endDate: '2018-03-15T03:00:00.000Z',
+    source: 'api'
   },
   {
     _id: '5a26396b99173b18b360bf25',
@@ -37,7 +41,8 @@ const CAMPAIGNS = [
     name: 'plains all american pipeline',
     product: '2250572',
     startDate: '2018-05-15T07:00:00.000Z',
-    endDate: '2018-06-15T07:00:00.000Z'
+    endDate: '2018-06-15T07:00:00.000Z',
+    source: 'api'
   },
   {
     _id: '5a26396b99173b18b360bf22',
@@ -45,7 +50,8 @@ const CAMPAIGNS = [
     name: 'cabela',
     product: '2250570',
     startDate: '2018-02-05T08:00:00.000Z',
-    endDate: '2018-03-05T08:00:00.000Z'
+    endDate: '2018-03-05T08:00:00.000Z',
+    source: 'api'
   }
 ]
 
@@ -185,7 +191,7 @@ const PRODUCTS = [
   },
   {
     _id: '5a26396b99173b18b360bf20',
-    productId: '2250587',
+    productId: '22505877',
     company: 'qep',
     source: 'import',
     name: 'qep tile tools 60089 7" portable tile saw'
@@ -309,7 +315,5 @@ const CAMPAIGN_STATUS = {
 }
 
 const SHORT_ID_CHARACTERS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-~'
-const MONGO_URL = 'mongodb://localhost:27017/manager'
-const MONGO_TEST_URL = 'mongodb://localhost:27017/manager_test'
 
-module.exports = { PRODUCTS, CAMPAIGNS, SOURCES, CAMPAIGN_STATUS, SHORT_ID_CHARACTERS, MONGO_URL, MONGO_TEST_URL }
+module.exports = { PRODUCTS, CAMPAIGNS, SOURCES, CAMPAIGN_STATUS, SHORT_ID_CHARACTERS }

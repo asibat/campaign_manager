@@ -45,8 +45,10 @@ describe('ProductsController', function() {
       const res = await chai.request(endpoint).get('/products')
 
       expect(res).to.have.status(200)
-      expect(res.body).to.be.an('array')
-      expect(res.body.length).to.equal(35)
+      expect(res).to.be.json
+      expect(res.body.docs.products).to.be.an('array')
+      expect(res.body.docs.count).to.equal(35)
+      expect(res.body.pagination).to.containSubset({ totalSize: 35 })
     })
 
     it('returns empty array when collection is empty', async () => {
@@ -54,8 +56,8 @@ describe('ProductsController', function() {
 
       expect(res).to.have.status(200)
       expect(res).to.be.json
-      expect(res.body).to.be.an('array')
-      expect(res.body).to.be.empty
+      expect(res.body.docs.products).to.be.an('array')
+      expect(res.body.docs.products).to.be.empty
     })
   })
 

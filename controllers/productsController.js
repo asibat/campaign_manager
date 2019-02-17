@@ -1,12 +1,20 @@
 const shortid = require('shortid')
 const { isEmpty, omit, get } = require('lodash')
 const { OK, NOT_FOUND, BAD_REQUEST, CREATED, NO_CONTENT } = require('http-status')
-const { PRODUCTS, CAMPAIGNS, SOURCES, SHORT_ID_CHARACTERS } = require('../utils/constants')
+const {
+  PRODUCTS,
+  CAMPAIGNS,
+  SOURCES,
+  SHORT_ID_CHARACTERS,
+  DEFAULT_PAGE_NUMBER,
+  DEFAULT_PAGE_SIZE
+} = require('../utils/constants')
 
 const { API } = SOURCES
 
 const Product = require('../models/product')
 const Campaign = require('../models/campaign')
+const paginate = require('../helpers/paginate')
 
 class ProductsController {
   constructor() {
@@ -27,17 +35,22 @@ class ProductsController {
   }
 
   async index(ctx) {
+    let pagination = null
     let products = null
 
     try {
-      products = await this.productsRepo.getAllProducts()
+      const page = parseInt(ctx.query.page) || DEFAULT_PAGE_NUMBER
+      const pageSize = parseInt(ctx.query.pageSize) || DEFAULT_PAGE_SIZE
+
+      products = await this.productsRepo.getAllProducts(page, pageSize)
+      pagination = paginate(page, pageSize, products.count)
     } catch (e) {
       ctx.body = e.message
       return
     }
 
     if (products && !isEmpty(products)) {
-      ctx.body = products
+      ctx.body = { docs: products, pagination }
       ctx.status = OK
     } else {
       ctx.body = []
