@@ -1,20 +1,20 @@
 const shortid = require('shortid')
 const { isEmpty, omit, get } = require('lodash')
-const { OK, NOT_FOUND, BAD_REQUEST, CREATED, NO_CONTENT } = require('http-status')
-const {
-  PRODUCTS,
-  CAMPAIGNS,
-  SOURCES,
-  SHORT_ID_CHARACTERS,
-  DEFAULT_PAGE_NUMBER,
-  DEFAULT_PAGE_SIZE
-} = require('../utils/constants')
+const { OK, NOT_FOUND, CREATED, NO_CONTENT, BAD_REQUEST } = require('http-status')
 
+const { PRODUCTS, CAMPAIGNS, SOURCES, SHORT_ID_CHARACTERS } = require('../utils/constants')
+const {
+  badRequest,
+  indexValidator,
+  initPaginationValue,
+  validateProductCreateRequest,
+  validateRequestBody
+} = require('../helpers/helpers')
+const paginate = require('../helpers/paginate')
 const { API } = SOURCES
 
 const Product = require('../models/product')
 const Campaign = require('../models/campaign')
-const paginate = require('../helpers/paginate')
 
 class ProductsController {
   constructor() {
@@ -36,17 +36,13 @@ class ProductsController {
 
   async index(ctx) {
     let pagination = null
-    let products = null
-    let conditions = {}
-    const { source } = ctx.query
-    try {
-      if (source) {
-        if (!['api', 'import'].includes(source)) return this.badRequest(ctx, 'Invalid source filter')
-        conditions['source'] = source
-      }
-      const page = parseInt(ctx.query.page) || DEFAULT_PAGE_NUMBER
-      const pageSize = parseInt(ctx.query.pageSize) || DEFAULT_PAGE_SIZE
+    let products
+    const conditions = indexValidator(ctx)
+    if (ctx.status === BAD_REQUEST) return
 
+    const { page, pageSize } = initPaginationValue(ctx.query)
+
+    try {
       products = await this.productsRepo.getAllProducts(page, pageSize, conditions)
       pagination = paginate(page, pageSize, products.count)
     } catch (e) {
@@ -82,9 +78,9 @@ class ProductsController {
     let body = ctx.request.body
     const productId = shortid.generate()
 
-    if (!body || isEmpty(body)) return this.badRequest(ctx, 'request body is empty')
-    if (!body.hasOwnProperty('company') || !body.hasOwnProperty('name'))
-      return this.badRequest(ctx, 'mandatory fields are {name, company}')
+    validateProductCreateRequest(ctx)
+    if (ctx.status === BAD_REQUEST) return
+
     body = { productId, ...body }
 
     try {
@@ -102,13 +98,12 @@ class ProductsController {
     const productId = ctx.params.id
     const productDoc = ctx.request.body
 
-    if (!productId) return this.badRequest(ctx, 'A required input is missing: productId')
-    if (!productDoc || isEmpty(productDoc)) return this.badRequest(ctx, 'request body is empty')
+    validateRequestBody(productDoc)
 
     try {
-      if (!(await this.productsRepo.isDuplicate(productId))) return this.badRequest(ctx, 'Invalid ProductId')
-      if (!isEmpty(await this.campaignsRepo.getCampaignByProductId(productId, 'active')))
-        return this.badRequest(ctx, "Can't update a product with active campaign")
+      await this.validateUpdateOrDeleteRequest(ctx)
+      if (ctx.status === BAD_REQUEST) return
+
       await this.productsRepo.updateProduct(productId, productDoc)
     } catch (e) {
       ctx.body = e.message
@@ -121,10 +116,8 @@ class ProductsController {
     const productId = ctx.params.id
 
     try {
-      if (!(await this.productsRepo.isDuplicate(productId))) return this.badRequest(ctx, 'Invalid product id')
-
-      if (!isEmpty(await this.campaignsRepo.getCampaignByProductId(productId, 'active')))
-        return this.badRequest(ctx, "Can't Delete a product with active campaign")
+      await this.validateUpdateOrDeleteRequest(ctx)
+      if (ctx.status === BAD_REQUEST) return
 
       await this.productsRepo.deleteProduct(productId)
     } catch (e) {
@@ -137,13 +130,14 @@ class ProductsController {
 
   async findCampaigns(ctx) {
     const { id } = ctx.params
-    let campaign = null
+    let campaign
     let status = null
 
+    if (ctx.query.status) {
+      status = ctx.query.status
+    }
+
     try {
-      if (ctx.query.status) {
-        status = ctx.query.status
-      }
       campaign = await this.campaignsRepo.getCampaignByProductId(id, status)
     } catch (e) {
       ctx.body = e.message
@@ -158,9 +152,17 @@ class ProductsController {
     }
   }
 
-  badRequest(ctx, errors = '') {
-    ctx.status = BAD_REQUEST
-    ctx.body = errors
+  async validateUpdateOrDeleteRequest(ctx) {
+    const productId = ctx.params.id
+
+    try {
+      if (!(await this.productsRepo.isDuplicate(productId))) return badRequest(ctx, 'Invalid ProductId')
+      if (!isEmpty(await this.campaignsRepo.getCampaignByProductId(productId, 'active')))
+        return badRequest(ctx, "Can't update or delete a product with active campaign")
+    } catch (e) {
+      ctx.body = e.message
+      ctx.status = 500
+    }
   }
 }
 

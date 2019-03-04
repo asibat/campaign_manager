@@ -2,21 +2,13 @@ const shortid = require('shortid')
 const { isEmpty, omit } = require('lodash')
 const { OK, NOT_FOUND, BAD_REQUEST, CREATED, NO_CONTENT } = require('http-status')
 
-const {
-  SOURCES,
-  SHORT_ID_CHARACTERS,
-  CAMPAIGN_STATUS,
-  DEFAULT_PAGE_NUMBER,
-  DEFAULT_PAGE_SIZE
-} = require('../utils/constants')
+const { SOURCES, SHORT_ID_CHARACTERS } = require('../utils/constants')
+const { badRequest, indexValidator, initPaginationValue, validateRequestBody } = require('../helpers/helpers')
+const paginate = require('../helpers/paginate')
 const { API } = SOURCES
-const { ACTIVE, ARCHIVED, PENDING } = CAMPAIGN_STATUS
 
 const Campaign = require('../models/campaign')
 const Product = require('../models/product')
-const paginate = require('../helpers/paginate')
-
-const campaignStatuses = [ACTIVE, ARCHIVED, PENDING]
 
 class CampaignsController {
   constructor() {
@@ -26,23 +18,13 @@ class CampaignsController {
   }
 
   async index(ctx) {
-    let campaigns = null
-    let pagination = null
-    let conditions = {}
-    const { status, source } = ctx.query
+    let campaigns, pagination
+    const conditions = indexValidator(ctx)
+    if (ctx.status === BAD_REQUEST) return
+
+    const { page, pageSize } = initPaginationValue(ctx.query)
 
     try {
-      if (status) {
-        if (!campaignStatuses.includes(status)) return this.badRequest(ctx, 'Invalid status')
-        conditions['status'] = status
-      }
-      if (source) {
-        if (!['api', 'import'].includes(source)) return this.badRequest(ctx, 'Invalid source filter')
-        conditions['source'] = source
-      }
-      const page = parseInt(ctx.query.page) || DEFAULT_PAGE_NUMBER
-      const pageSize = parseInt(ctx.query.pageSize) || DEFAULT_PAGE_SIZE
-
       campaigns = await this.campaignsRepo.getAllCampaigns(page, pageSize, conditions)
       pagination = paginate(page, pageSize, campaigns.count)
     } catch (e) {
@@ -73,56 +55,32 @@ class CampaignsController {
   }
 
   async create(ctx) {
-    let body = ctx.request.body
-    let product = null
-    let campaign = null
-
-    if (!body || isEmpty(body)) return this.badRequest(ctx, 'request body is empty')
-
-    const { product: productId, name, startDate, endDate } = body
-    if (!productId || !startDate || !endDate || !name)
-      return this.badRequest(ctx, 'mandatory fields are {name, product, startDate, endDate}')
-
+    let campaign
     const campaignId = shortid.generate()
+    const body = await this.validateCampaignCreation(ctx, campaignId)
+    if (ctx.status === BAD_REQUEST) return
 
+    body.source = API
     try {
-      body.source = API
-      product = await this.productsRepo.getProductById(productId)
-
-      if (product && !isEmpty(product)) {
-        body = { campaignId, ...body }
-        campaign = await this.campaignsRepo.createCampaign(body)
-      } else {
-        return this.badRequest(ctx, 'Product does not exist!')
-      }
-      ctx.body = { ...omit(campaign.toObject(), ['_id', '__v']) }
-      ctx.status = CREATED
+      campaign = await this.campaignsRepo.createCampaign(body)
     } catch (e) {
       ctx.body = e.message
       ctx.status = 500
     }
+
+    ctx.body = { ...omit(campaign.toObject(), ['_id', '__v']) }
+    ctx.status = CREATED
   }
 
   async update(ctx) {
     const campaignId = ctx.params.id
-
     const campaignDoc = ctx.request.body
 
-    if (!campaignDoc || isEmpty(campaignDoc)) return this.badRequest(ctx, 'request body is empty')
-
+    validateRequestBody(campaignDoc)
     try {
-      if (!(await this.campaignsRepo.isDuplicate(campaignId))) return this.badRequest(ctx, 'Invalid Campaign Id')
+      await this.validateUpdateOrDeleteRequest(ctx)
+      if (ctx.status === BAD_REQUEST) return
 
-      if (await this.campaignsRepo.isActive(campaignId)) {
-        return this.badRequest(ctx, "Can't update active campaigns")
-      }
-      if (campaignDoc.hasOwnProperty('product')) {
-        const { product: productId } = campaignDoc
-
-        if (!(await this.productsRepo.isDuplicate(productId))) {
-          return this.badRequest(ctx, 'Invalid Product Id')
-        }
-      }
       await this.campaignsRepo.updateCampaign(campaignId, campaignDoc)
     } catch (e) {
       ctx.body = e.message
@@ -135,12 +93,8 @@ class CampaignsController {
     const campaignId = ctx.params.id
 
     try {
-      if (!(await this.campaignsRepo.isDuplicate(campaignId))) return this.badRequest(ctx, 'Invalid campaign id')
-      const isActive = await this.campaignsRepo.isActive(campaignId)
-      if (isActive) {
-        return this.badRequest(ctx, "Can't delete active campaigns")
-      }
-
+      await this.validateUpdateOrDeleteRequest(ctx)
+      if (ctx.status === BAD_REQUEST) return
       await this.campaignsRepo.deleteCampaign(campaignId)
     } catch (e) {
       ctx.body = e.message
@@ -149,9 +103,54 @@ class CampaignsController {
     ctx.status = NO_CONTENT
   }
 
-  badRequest(ctx, errors = '') {
-    ctx.status = BAD_REQUEST
-    ctx.body = errors
+  async validateUpdateOrDeleteRequest(ctx) {
+    const campaignId = ctx.params.id
+    const campaignDoc = ctx.request.body
+
+    try {
+      if (!(await this.campaignsRepo.isDuplicate(campaignId))) {
+        return badRequest(ctx, 'Invalid Campaign Id')
+      }
+
+      if (await this.campaignsRepo.isActive(campaignId)) {
+        return badRequest(ctx, "Can't update or delete active campaigns")
+      }
+      if (campaignDoc && campaignDoc.hasOwnProperty('product')) {
+        const { product: productId } = campaignDoc
+
+        if (!(await this.productsRepo.isDuplicate(productId))) {
+          return badRequest(ctx, 'Invalid Product Id')
+        }
+      }
+    } catch (e) {
+      ctx.body = e.message
+      ctx.status = 500
+    }
+  }
+
+  async validateCampaignCreation(ctx, campaignId) {
+    let body = ctx.request.body
+    let product
+
+    validateRequestBody(ctx)
+
+    const { product: productId, name, startDate, endDate } = body
+    if (!productId || !startDate || !endDate || !name)
+      return badRequest(ctx, 'mandatory fields are {name, product, startDate, endDate}')
+
+    try {
+      product = await this.productsRepo.getProductById(productId)
+    } catch (e) {
+      ctx.body = e.message
+      ctx.status = 500
+    }
+
+    if (product && !isEmpty(product)) {
+      body = { campaignId, ...body }
+    } else {
+      return badRequest(ctx, 'Product does not exist!')
+    }
+    return body
   }
 }
 
